@@ -19,28 +19,42 @@ export const quizService = {
   },
 
   async getRandomQuestions(config: QuizConfig): Promise<Question[]> {
-    try {
-      const queries = [];
-      
-      if (config.mode === 'categorie' && config.categorieId) {
-        queries.push(Query.equal('categorie_id', config.categorieId));
-      }
-
-      // Récupérer toutes les questions correspondantes
-      const response = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        appwriteConfig.collections.questions,
-        queries
-      );
-
-      // Mélanger et prendre le nombre demandé
-      const shuffled = response.documents.sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, config.nombreQuestions) as Question[];
-    } catch (error) {
-      console.error('Erreur récupération questions:', error);
-      return [];
+  try {
+    const queries = [];
+    
+    if (config.mode === 'categorie' && config.categorieId) {
+      queries.push(Query.equal('categorie_id', config.categorieId));
     }
-  },
+
+    // Récupérer toutes les questions correspondantes
+    const response = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.collections.questions,
+      queries
+    );
+
+    // Mélanger
+    const shuffled = response.documents.sort(() => Math.random() - 0.5);
+
+    // Mapper en Question[]
+    const questions: Question[] = shuffled
+      .slice(0, config.nombreQuestions)
+      .map(doc => ({
+        $id: doc.$id,
+        texte: doc.texte,
+        categorie_id: doc.categorie_id,
+        reponses: doc.reponses,
+        bonne_reponse: doc.bonne_reponse,
+        difficulte: doc.difficulte,
+        // ajoute d'autres champs si ton type Question en a
+      }));
+
+    return questions;
+  } catch (error) {
+    console.error('Erreur récupération questions:', error);
+    return [];
+  }
+},
 
   async saveResult(
     userId: string,

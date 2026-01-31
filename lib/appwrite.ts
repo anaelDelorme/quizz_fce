@@ -2,17 +2,18 @@
 import { Client, Account, Databases } from 'appwrite';
 import { appwriteConfig } from './appwrite.config';
 
-const serverClient = new Client()
+const client = new Client()
   .setEndpoint(appwriteConfig.endpoint)
   .setProject(appwriteConfig.projectId);
 
-// Clé API côté serveur
-const apiKey = process.env.APPWRITE_API_KEY;
-if (!apiKey) throw new Error('APPWRITE_API_KEY manquante');
-serverClient.headers = { 'X-Appwrite-Key': apiKey };
+// Si on est côté serveur (Node), ajouter la clé API
+if (typeof window === 'undefined') {
+  client.headers = {
+    'X-Appwrite-Key': process.env.APPWRITE_API_KEY!
+  };
+}
 
-export const account = new Account(serverClient);
-export const databases = new Databases(serverClient);
-export { serverClient as client };
+export const account = new Account(client);
+export const databases = new Databases(client);
 
-export const getAppwriteClient = () => ({ client: serverClient, account, databases });
+export { client };

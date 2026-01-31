@@ -1,11 +1,10 @@
-import { ID } from 'appwrite';
-import { getAppwriteClient } from './appwrite';
+import { account, databases } from './appwrite';
+import { ID, Query } from 'appwrite';
 import { appwriteConfig } from './appwrite.config';
 
 export const authService = {
   async register(email: string, password: string, pseudo: string) {
     try {
-      const { account, databases } = getAppwriteClient();
       if (!account || !databases) throw new Error('Appwrite client not initialized');
 
       // Créer l'utilisateur
@@ -41,7 +40,6 @@ export const authService = {
 
   async login(email: string, password: string) {
     try {
-      const { account } = getAppwriteClient();
       if (!account) throw new Error('Appwrite account not initialized');
       return await account.createEmailPasswordSession(email, password);
     } catch (error) {
@@ -52,7 +50,6 @@ export const authService = {
 
   async logout() {
     try {
-      const { account } = getAppwriteClient();
       if (!account) throw new Error('Appwrite account not initialized');
       await account.deleteSession('current');
     } catch (error) {
@@ -63,7 +60,6 @@ export const authService = {
 
   async getCurrentUser() {
     try {
-      const { account } = getAppwriteClient();
       if (!account) return null;
       return await account.get();
     } catch (error) {
@@ -73,7 +69,6 @@ export const authService = {
 
   async getCurrentProfile() {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const user = await this.getCurrentUser();

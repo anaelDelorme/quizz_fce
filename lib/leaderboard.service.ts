@@ -1,12 +1,11 @@
-import { Query } from 'appwrite';
-import { getAppwriteClient } from './appwrite';
+import { account, databases } from './appwrite';
+import { ID, Query } from 'appwrite';
 import { appwriteConfig } from './appwrite.config';
 import { LeaderboardEntry } from '@/types';
 
 export const leaderboardService = {
   async getTopPlayers(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const response = await databases.listDocuments(
@@ -32,7 +31,6 @@ export const leaderboardService = {
 
   async getTopByCorrectAnswers(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const response = await databases.listDocuments(
@@ -58,7 +56,6 @@ export const leaderboardService = {
 
   async getTopByWinRate(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const response = await databases.listDocuments(
@@ -86,7 +83,6 @@ export const leaderboardService = {
 
   async getTopByBestScore(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const response = await databases.listDocuments(
@@ -116,7 +112,6 @@ export const leaderboardService = {
     limit: number = 10
   ): Promise<LeaderboardEntry[]> {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const queries = [
@@ -162,7 +157,6 @@ export const leaderboardService = {
 
   async getUserRank(userId: string): Promise<{ globalRank: number; totalPlayers: number }> {
     try {
-      const { databases } = getAppwriteClient();
       if (!databases) throw new Error('Appwrite databases not initialized');
 
       const allProfiles = await databases.listDocuments(

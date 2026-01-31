@@ -19,21 +19,24 @@ export default function PlayPage() {
     loadCategories();
   }, []);
 
-  const loadCategories = async () => {
+ const loadCategories = async () => {
   try {
+    console.log('📡 Tentative de récupération des catégories…');
     const catsDocs = await quizService.getCategories();
+    console.log('✅ Raw docs récupérées depuis Appwrite :', catsDocs);
 
     const cats: Category[] = catsDocs.map(doc => ({
-      $id: doc.$id,  // exactement comme dans ton type Category
-      nom: doc.nom,   // adapte si nécessaire
-      // ajoute d'autres champs si Category en a
+      $id: doc.$id,
+      nom: doc.nom, // assure-toi que le champ s’appelle bien "nom" côté Appwrite
     }));
 
+    console.log('✅ Categories mappées :', cats);
     setCategories(cats);
   } catch (error) {
-    console.error("Erreur lors du chargement des catégories :", error);
+    console.error('❌ Erreur lors du chargement des catégories :', error);
   }
 };
+
 
   const startQuiz = () => {
     if (!selectedMode) return;

@@ -5,9 +5,10 @@ import { appwriteConfig } from './appwrite.config';
 export const authService = {
   async register(email: string, password: string, pseudo: string) {
     try {
-      const { account, databases } = getAppwriteClient(); // <-- ici
-      if (!account) throw new Error('Appwrite account not initialized');
+      const { account, databases } = getAppwriteClient();
+      if (!account || !databases) throw new Error('Appwrite client not initialized');
 
+      // Créer l'utilisateur
       const user = await account.create(ID.unique(), email, password, pseudo);
 
       // Créer le profil
@@ -42,7 +43,6 @@ export const authService = {
     try {
       const { account } = getAppwriteClient();
       if (!account) throw new Error('Appwrite account not initialized');
-
       return await account.createEmailPasswordSession(email, password);
     } catch (error) {
       console.error('Erreur connexion:', error);
@@ -54,7 +54,6 @@ export const authService = {
     try {
       const { account } = getAppwriteClient();
       if (!account) throw new Error('Appwrite account not initialized');
-
       await account.deleteSession('current');
     } catch (error) {
       console.error('Erreur déconnexion:', error);
@@ -66,7 +65,6 @@ export const authService = {
     try {
       const { account } = getAppwriteClient();
       if (!account) return null;
-
       return await account.get();
     } catch (error) {
       return null;
@@ -76,6 +74,8 @@ export const authService = {
   async getCurrentProfile() {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const user = await this.getCurrentUser();
       if (!user) return null;
 

@@ -4,15 +4,20 @@ import { Question, QuizConfig } from '@/types';
 import { getAppwriteClient } from './appwrite';
 
 export const quizService = {
-  async getCategories() {
+  async getCategories(): Promise<{ $id: string; nom: string }[]> {
     try {
-      const { databases } = getAppwriteClient(); // appel ici
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.categories,
         []
-      );
-      return response.documents;
+      );// Mapper les documents pour avoir exactement $id et nom
+      return response.documents.map(doc => ({
+        $id: doc.$id,
+        nom: doc.nom // ⚠ ici doc.nom doit exister dans Appwrite
+      }));
     } catch (error) {
       console.error('Erreur récupération catégories:', error);
       return [];
@@ -22,8 +27,9 @@ export const quizService = {
   async getRandomQuestions(config: QuizConfig): Promise<Question[]> {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const queries: any[] = [];
-      
       if (config.mode === 'categorie' && config.categorieId) {
         queries.push(Query.equal('categorie_id', config.categorieId));
       }
@@ -42,7 +48,7 @@ export const quizService = {
         categorie_id: doc.categorie_id,
         reponses: doc.reponses,
         bonne_reponse: doc.bonne_reponse,
-        difficulte: doc.difficulte,
+        difficulte: doc.difficulte
       }));
     } catch (error) {
       console.error('Erreur récupération questions:', error);
@@ -55,11 +61,12 @@ export const quizService = {
     score: number,
     totalQuestions: number,
     wrongQuestions: string[],
-    categorieId: string | undefined,
-    durationSeconds: number
+    categorieId?: string,
+    durationSeconds?: number
   ) {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
 
       await databases.createDocument(
         appwriteConfig.databaseId,
@@ -71,7 +78,7 @@ export const quizService = {
           total_questions: totalQuestions,
           questions_ratees: JSON.stringify(wrongQuestions),
           categorie_id: categorieId || null,
-          duree_secondes: durationSeconds
+          duree_secondes: durationSeconds || 0
         }
       );
 
@@ -84,6 +91,7 @@ export const quizService = {
   async updateProfileStats(userId: string, score: number, totalQuestions: number, categorieId?: string) {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
 
       const profiles = await databases.listDocuments(
         appwriteConfig.databaseId,
@@ -123,6 +131,7 @@ export const quizService = {
   async updateCategoryStats(userId: string, categorieId: string, score: number, totalQuestions: number) {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
 
       const stats = await databases.listDocuments(
         appwriteConfig.databaseId,
@@ -176,6 +185,8 @@ export const quizService = {
   async getUserResults(userId: string) {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.resultats,
@@ -195,6 +206,8 @@ export const quizService = {
   async getWrongQuestions(userId: string) {
     try {
       const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const results = await this.getUserResults(userId);
       const wrongQuestionIds = new Set<string>();
 

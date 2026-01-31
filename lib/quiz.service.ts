@@ -13,7 +13,9 @@ export const quizService = {
         appwriteConfig.databaseId,
         appwriteConfig.collections.categories,
         []
-      );// Mapper les documents pour avoir exactement $id et nom
+      );
+      // Mapper les documents pour avoir exactement $id et nom
+      console.log('Docs récupérées:', response.documents);
       return response.documents.map(doc => ({
         $id: doc.$id,
         nom: doc.nom // ⚠ ici doc.nom doit exister dans Appwrite

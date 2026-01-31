@@ -25,10 +25,23 @@ export default function LeaderboardPage() {
     loadCategories();
   }, []);
 
-  const loadCategories = async () => {
-    const cats = await quizService.getCategories();
-    setCategories(cats as Category[]);
-  };
+const loadCategories = async () => {
+  try {
+    const catsDocs = await quizService.getCategories();
+
+    // Transforme chaque Document Appwrite en Category
+    const cats: Category[] = catsDocs.map(doc => ({
+      $id: doc.$id,
+      nom: doc.nom, // adapte si ton champ a un autre nom dans Appwrite
+      // ajoute d'autres champs si ton type Category en a
+    }));
+
+    setCategories(cats);
+  } catch (error) {
+    console.error("Erreur lors du chargement des catégories :", error);
+  }
+};
+
 
   const loadData = async () => {
     setLoading(true);

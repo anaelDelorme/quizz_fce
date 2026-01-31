@@ -1,7 +1,8 @@
 import { Query } from 'appwrite';
-import { databases } from './appwrite';
+import { getAppwriteClient } from './appwrite';
 import { appwriteConfig } from './appwrite.config';
 import { LeaderboardEntry } from '@/types';
+const { databases, account } = getAppwriteClient();
 
 export const leaderboardService = {
   async getTopPlayers(limit: number = 10): Promise<LeaderboardEntry[]> {

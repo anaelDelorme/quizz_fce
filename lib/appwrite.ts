@@ -1,11 +1,22 @@
 import { Client, Account, Databases } from 'appwrite';
 import { appwriteConfig } from './appwrite.config';
 
-const client = new Client()
-  .setEndpoint(appwriteConfig.endpoint)
-  .setProject(appwriteConfig.projectId);
+let client: Client | null = null;
+let account: Account | null = null;
+let databases: Databases | null = null;
 
-export const account = new Account(client);
-export const databases = new Databases(client);
+export function getAppwriteClient() {
+  if (!client) {
+    if (!appwriteConfig.endpoint || !appwriteConfig.projectId) {
+      throw new Error('Appwrite env variables are missing');
+    }
 
-export { client };
+    client = new Client()
+      .setEndpoint(appwriteConfig.endpoint)
+      .setProject(appwriteConfig.projectId);
+
+    account = new Account(client);
+    databases = new Databases(client);
+  }
+  return { client, account, databases };
+}

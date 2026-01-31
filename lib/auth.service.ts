@@ -1,6 +1,7 @@
 import { ID } from 'appwrite';
-import { account, databases } from './appwrite';
+import { getAppwriteClient } from './appwrite';
 import { appwriteConfig } from './appwrite.config';
+const { databases, account } = getAppwriteClient();
 
 export const authService = {
   async register(email: string, password: string, pseudo: string) {

@@ -18,34 +18,44 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
+
+        const prof = await authService.getCurrentProfile();
+        setProfile(prof || {});
+
+        const res = await quizService.getUserResults(user.$id);
+        setResults(res || []);
+
+        const wrong = await quizService.getWrongQuestions(user.$id);
+        setWrongQuestions(wrong || []);
+
+        const rank = await leaderboardService.getUserRank(user.$id);
+        setUserRank(rank || null);
+
+      } catch (error) {
+        console.error('Erreur chargement dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
-  }, []);
-
-  const loadData = async () => {
-    const user = await authService.getCurrentUser();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
-    const prof = await authService.getCurrentProfile();
-    setProfile(prof);
-
-    const res = await quizService.getUserResults(user.$id);
-    setResults(res);
-
-    const wrong = await quizService.getWrongQuestions(user.$id);
-    setWrongQuestions(wrong);
-
-    const rank = await leaderboardService.getUserRank(user.$id);
-    setUserRank(rank);
-
-    setLoading(false);
-  };
+  }, [router]);
 
   const handleLogout = async () => {
-    await authService.logout();
-    router.push('/');
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Erreur logout:', error);
+    } finally {
+      router.push('/');
+    }
   };
 
   if (loading) {
@@ -60,9 +70,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!profile) {
-    return null;
-  }
+  if (!profile) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 py-8 px-4">
@@ -95,9 +103,11 @@ export default function DashboardPage() {
               <User className="w-12 h-12 text-white" />
             </div>
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-2">{profile.pseudo}</h1>
+              <h1 className="text-4xl font-bold text-white mb-2">{profile.pseudo || 'Utilisateur'}</h1>
               <p className="text-white/70 text-lg">
-                {userRank && `Rang global: #${userRank.globalRank} sur ${userRank.totalPlayers}`}
+                {userRank
+                  ? `Rang global: #${userRank.globalRank || '?'} sur ${userRank.totalPlayers || '?'}`
+                  : 'Rang non disponible'}
               </p>
             </div>
           </div>
@@ -108,25 +118,25 @@ export default function DashboardPage() {
           <StatCard
             icon={<Trophy className="w-8 h-8" />}
             label="Quiz joués"
-            value={profile.total_quiz_joues}
+            value={profile.total_quiz_joues ?? 0}
             gradient="from-yellow-400 to-orange-500"
           />
           <StatCard
             icon={<Target className="w-8 h-8" />}
             label="Bonnes réponses"
-            value={profile.total_bonnes_reponses}
+            value={profile.total_bonnes_reponses ?? 0}
             gradient="from-green-400 to-blue-500"
           />
           <StatCard
             icon={<TrendingUp className="w-8 h-8" />}
             label="Taux de réussite"
-            value={`${Math.round(profile.pourcentage_reussite)}%`}
+            value={`${Math.round(profile.pourcentage_reussite ?? 0)}%`}
             gradient="from-purple-400 to-pink-500"
           />
           <StatCard
             icon={<Award className="w-8 h-8" />}
             label="Meilleur score"
-            value={profile.meilleur_score}
+            value={profile.meilleur_score ?? 0}
             gradient="from-pink-400 to-red-500"
           />
         </div>
@@ -144,24 +154,26 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {results.slice(0, 5).map((result: any) => (
                 <div
-                  key={result.$id}
+                  key={result.$id || Math.random()}
                   className="bg-white/5 rounded-xl p-4 flex items-center justify-between"
                 >
                   <div>
                     <div className="text-white font-bold text-xl">
-                      {result.score} / {result.total_questions}
+                      {result.score ?? 0} / {result.total_questions ?? 0}
                     </div>
                     <div className="text-white/60 text-sm">
-                      {new Date(result.$createdAt).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
+                      {result.$createdAt
+                        ? new Date(result.$createdAt).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })
+                        : 'Date inconnue'}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-white/60" />
-                    <span className="text-white/80">{result.duree_secondes}s</span>
+                    <span className="text-white/80">{result.duree_secondes ?? 0}s</span>
                   </div>
                 </div>
               ))}
@@ -180,12 +192,15 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {wrongQuestions.slice(0, 5).map((question: any) => (
                 <div
-                  key={question.$id}
+                  key={question.$id || Math.random()}
                   className="bg-red-500/10 border border-red-500/30 rounded-xl p-4"
                 >
-                  <p className="text-white font-semibold mb-2">{question.texte}</p>
+                  <p className="text-white font-semibold mb-2">{question.texte || 'Texte indisponible'}</p>
                   <div className="text-white/60 text-sm">
-                    Réponse correcte: {JSON.parse(question.reponses)[question.bonne_reponse]}
+                    Réponse correcte:{' '}
+                    {Array.isArray(question.reponses)
+                      ? question.reponses[question.bonne_reponse ?? 0]
+                      : 'N/A'}
                   </div>
                 </div>
               ))}

@@ -20,9 +20,20 @@ export default function PlayPage() {
   }, []);
 
   const loadCategories = async () => {
-    const cats = await quizService.getCategories();
-    setCategories(cats as Category[]);
-  };
+  try {
+    const catsDocs = await quizService.getCategories();
+
+    const cats: Category[] = catsDocs.map(doc => ({
+      $id: doc.$id,  // exactement comme dans ton type Category
+      nom: doc.nom,   // adapte si nécessaire
+      // ajoute d'autres champs si Category en a
+    }));
+
+    setCategories(cats);
+  } catch (error) {
+    console.error("Erreur lors du chargement des catégories :", error);
+  }
+};
 
   const startQuiz = () => {
     if (!selectedMode) return;

@@ -1,13 +1,15 @@
 import { ID } from 'appwrite';
 import { getAppwriteClient } from './appwrite';
 import { appwriteConfig } from './appwrite.config';
-const { databases, account } = getAppwriteClient();
 
 export const authService = {
   async register(email: string, password: string, pseudo: string) {
     try {
+      const { account, databases } = getAppwriteClient(); // <-- ici
+      if (!account) throw new Error('Appwrite account not initialized');
+
       const user = await account.create(ID.unique(), email, password, pseudo);
-      
+
       // Créer le profil
       await databases.createDocument(
         appwriteConfig.databaseId,
@@ -28,7 +30,7 @@ export const authService = {
 
       // Se connecter automatiquement après l'inscription
       await account.createEmailPasswordSession(email, password);
-      
+
       return user;
     } catch (error) {
       console.error('Erreur inscription:', error);
@@ -38,6 +40,9 @@ export const authService = {
 
   async login(email: string, password: string) {
     try {
+      const { account } = getAppwriteClient();
+      if (!account) throw new Error('Appwrite account not initialized');
+
       return await account.createEmailPasswordSession(email, password);
     } catch (error) {
       console.error('Erreur connexion:', error);
@@ -47,6 +52,9 @@ export const authService = {
 
   async logout() {
     try {
+      const { account } = getAppwriteClient();
+      if (!account) throw new Error('Appwrite account not initialized');
+
       await account.deleteSession('current');
     } catch (error) {
       console.error('Erreur déconnexion:', error);
@@ -56,6 +64,9 @@ export const authService = {
 
   async getCurrentUser() {
     try {
+      const { account } = getAppwriteClient();
+      if (!account) return null;
+
       return await account.get();
     } catch (error) {
       return null;
@@ -64,6 +75,7 @@ export const authService = {
 
   async getCurrentProfile() {
     try {
+      const { databases } = getAppwriteClient();
       const user = await this.getCurrentUser();
       if (!user) return null;
 

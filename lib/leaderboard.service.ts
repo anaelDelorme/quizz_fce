@@ -2,11 +2,13 @@ import { Query } from 'appwrite';
 import { getAppwriteClient } from './appwrite';
 import { appwriteConfig } from './appwrite.config';
 import { LeaderboardEntry } from '@/types';
-const { databases, account } = getAppwriteClient();
 
 export const leaderboardService = {
   async getTopPlayers(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.profiles,
@@ -30,6 +32,9 @@ export const leaderboardService = {
 
   async getTopByCorrectAnswers(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.profiles,
@@ -53,11 +58,14 @@ export const leaderboardService = {
 
   async getTopByWinRate(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.profiles,
         [
-          Query.greaterThan('total_reponses', 20), // Minimum 20 réponses
+          Query.greaterThan('total_reponses', 20),
           Query.orderDesc('pourcentage_reussite'),
           Query.limit(limit)
         ]
@@ -78,6 +86,9 @@ export const leaderboardService = {
 
   async getTopByBestScore(limit: number = 10): Promise<LeaderboardEntry[]> {
     try {
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.profiles,
@@ -105,6 +116,9 @@ export const leaderboardService = {
     limit: number = 10
   ): Promise<LeaderboardEntry[]> {
     try {
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const queries = [
         Query.equal('categorie_id', categorieId),
         Query.orderDesc(metric),
@@ -136,9 +150,7 @@ export const leaderboardService = {
       return response.documents.map((doc: any, index) => ({
         userId: doc.user_id,
         pseudo: profileMap.get(doc.user_id) || 'Anonyme',
-        value: metric === 'pourcentage_reussite' 
-          ? Math.round(doc[metric])
-          : doc[metric],
+        value: metric === 'pourcentage_reussite' ? Math.round(doc[metric]) : doc[metric],
         pourcentage: metric === 'pourcentage_reussite' ? doc[metric] : undefined,
         rank: index + 1
       }));
@@ -148,11 +160,11 @@ export const leaderboardService = {
     }
   },
 
-  async getUserRank(userId: string): Promise<{
-    globalRank: number;
-    totalPlayers: number;
-  }> {
+  async getUserRank(userId: string): Promise<{ globalRank: number; totalPlayers: number }> {
     try {
+      const { databases } = getAppwriteClient();
+      if (!databases) throw new Error('Appwrite databases not initialized');
+
       const allProfiles = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.collections.profiles,
